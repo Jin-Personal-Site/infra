@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 import 'source-map-support/register'
 import * as cdk from 'aws-cdk-lib'
-import { ServerAndDatabaseStack } from '../lib/1-server-and-database-stack'
-import { AdminStaticHostingStack } from '../lib/2-admin-static-hosting-stack'
-import { WebStaticHostingStack } from '../lib/3-web-static-hosting-stack'
 import { getConfigEnv } from '../lib/config/env'
+import { ServerAndDatabaseStack } from '../lib/1-server-and-database-stack'
+import { StaticHostingStack } from '../lib/2-static-hosting-stack'
 
 const { AWS_ACCOUNT_ID, AWS_REGION } = getConfigEnv()
 
@@ -16,5 +15,4 @@ const env: cdk.Environment = {
 const app = new cdk.App()
 
 new ServerAndDatabaseStack(app, 'ServerAndDatabaseStack', { env })
-new AdminStaticHostingStack(app, 'AdminStaticHostingStack', { env })
-new WebStaticHostingStack(app, 'WebStaticHostingStack', { env })
+new StaticHostingStack(app, 'StaticHostingStack', { env })

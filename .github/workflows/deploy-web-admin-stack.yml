@@ -1,10 +1,10 @@
-name: Deploy Web stack
+name: Deploy Admin and Web stack
 
 on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  deploy_cdk:
     runs-on: ubuntu-latest
 
     steps:
@@ -38,4 +38,4 @@ jobs:
         run: npx cdk bootstrap
 
       - name: Deploy CDK stack
-        run: npx cdk deploy --require-approval never WebStaticHostingStack
+        run: npx cdk deploy --require-approval never StaticHostingStack

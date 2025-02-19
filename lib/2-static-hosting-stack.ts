@@ -5,17 +5,18 @@ import { getConfigEnv } from './config/env'
 
 const envConfig = getConfigEnv()
 
-export class AdminStaticHostingStack extends cdk.Stack {
+export class StaticHostingStack extends cdk.Stack {
 	constructor(scope: Construct, id: string, props?: cdk.StackProps) {
 		super(scope, id, props)
 
 		// 1. Create Bucket
 		const sourceBucket = new cdk.aws_s3.Bucket(this, 'MySourceBucket', {
 			bucketName: 'jin-jot-source',
+			autoDeleteObjects: true,
+			removalPolicy: cdk.RemovalPolicy.DESTROY,
 		})
-		sourceBucket.policy?.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN)
 
-		// 2. Create CloudFront function
+		// 2. Create CloudFront Function - Restrict request IP
 		const restrictIpCloudfrontFunction = new cdk.aws_cloudfront.Function(
 			this,
 			'RestrictIpFunction',
@@ -33,12 +34,15 @@ export class AdminStaticHostingStack extends cdk.Stack {
 				),
 			},
 		)
+		restrictIpCloudfrontFunction.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY)
 
-		// 3. Create Cloudfront distribution
-		const cloudFrontIdentity = new cdk.aws_cloudfront.OriginAccessIdentity(
+		// 3. Create Cloudfront distribution for Admin
+		const adminCloudFrontIdentity = new cdk.aws_cloudfront.OriginAccessIdentity(
 			this,
-			'WebCloudfrontIdentity',
+			'AdminCloudfrontIdentity',
 		)
+		adminCloudFrontIdentity.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY)
+
 		const adminCloudFront = new cdk.aws_cloudfront.Distribution(
 			this,
 			'MyAdminDistribution',
@@ -46,7 +50,7 @@ export class AdminStaticHostingStack extends cdk.Stack {
 				defaultBehavior: {
 					origin: new cdk.aws_cloudfront_origins.S3Origin(sourceBucket, {
 						originPath: '/admin',
-						originAccessIdentity: cloudFrontIdentity,
+						originAccessIdentity: adminCloudFrontIdentity,
 					}),
 					compress: true,
 					viewerProtocolPolicy:
@@ -76,11 +80,56 @@ export class AdminStaticHostingStack extends cdk.Stack {
 				],
 			},
 		)
-		sourceBucket.grantRead(cloudFrontIdentity)
+		sourceBucket.grantRead(adminCloudFrontIdentity)
 		adminCloudFront.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY)
 
 		new cdk.CfnOutput(this, 'AdminDistributionDomainName', {
 			value: adminCloudFront.distributionDomainName,
+		})
+
+		// 4. Create CloudFront distribution for Web
+		const webCloudFrontIdentity = new cdk.aws_cloudfront.OriginAccessIdentity(
+			this,
+			'WebCloudfrontIdentity',
+		)
+		webCloudFrontIdentity.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY)
+
+		const webCloudFront = new cdk.aws_cloudfront.Distribution(
+			this,
+			'MyWebDistribution',
+			{
+				defaultBehavior: {
+					origin: new cdk.aws_cloudfront_origins.S3Origin(sourceBucket, {
+						originPath: '/web',
+						originAccessIdentity: webCloudFrontIdentity,
+					}),
+					compress: true,
+					viewerProtocolPolicy:
+						cdk.aws_cloudfront.ViewerProtocolPolicy.ALLOW_ALL,
+					allowedMethods:
+						cdk.aws_cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+					cachePolicy: cdk.aws_cloudfront.CachePolicy.CACHING_OPTIMIZED,
+					originRequestPolicy:
+						cdk.aws_cloudfront.OriginRequestPolicy
+							.ALL_VIEWER_EXCEPT_HOST_HEADER,
+				},
+				priceClass: cdk.aws_cloudfront.PriceClass.PRICE_CLASS_ALL,
+				defaultRootObject: 'index.html',
+				errorResponses: [
+					{
+						ttl: cdk.Duration.seconds(10),
+						httpStatus: 403,
+						responseHttpStatus: 404,
+						responsePagePath: '/404.html',
+					},
+				],
+			},
+		)
+		sourceBucket.grantRead(webCloudFrontIdentity)
+		webCloudFront.applyRemovalPolicy(cdk.RemovalPolicy.DESTROY)
+
+		new cdk.CfnOutput(this, 'WebDistributionDomainName', {
+			value: webCloudFront.distributionDomainName,
 		})
 	}
 }
