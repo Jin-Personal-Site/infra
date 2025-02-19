@@ -1,27 +1,32 @@
 {
-  "name": "infra",
-  "version": "0.1.0",
-  "bin": {
-    "infra": "bin/infra.js"
-  },
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest",
-    "cdk": "cdk"
-  },
-  "devDependencies": {
-    "@types/jest": "^29.5.12",
-    "@types/node": "20.14.9",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.1.5",
-    "aws-cdk": "2.154.1",
-    "ts-node": "^10.9.2",
-    "typescript": "~5.5.3"
-  },
-  "dependencies": {
-    "aws-cdk-lib": "2.154.1",
-    "constructs": "^10.0.0",
-    "source-map-support": "^0.5.21"
-  }
+	"name": "infra",
+	"version": "0.1.0",
+	"bin": {
+		"infra": "bin/infra.js"
+	},
+	"scripts": {
+		"env:local": "dotenv -e .env.local",
+		"build": "tsc",
+		"watch": "tsc -w",
+		"test": "jest",
+		"cdk": "cdk",
+		"cdklocal": "dotenv -e .env.local cdklocal"
+	},
+	"devDependencies": {
+		"@types/jest": "^29.5.12",
+		"@types/node": "20.14.9",
+		"aws-cdk": "2.154.1",
+		"jest": "^29.7.0",
+		"ts-jest": "^29.1.5",
+		"ts-node": "^10.9.2",
+		"typescript": "~5.5.3"
+	},
+	"dependencies": {
+		"aws-cdk-lib": "2.154.1",
+		"constructs": "^10.0.0",
+		"dotenv": "^16.4.7",
+		"dotenv-cli": "^8.0.0",
+		"joi": "^17.13.3",
+		"source-map-support": "^0.5.21"
+	}
 }
